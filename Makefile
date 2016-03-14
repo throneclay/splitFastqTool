@@ -1,5 +1,5 @@
 CC=icpc
-exe=main
+exe=splitPhase
 
 bin: $(exe)
 
