@@ -1,5 +1,5 @@
 CC=icpc
-exe=splitPhase
+exe=splitDiffPart
 
 bin: $(exe)
 
