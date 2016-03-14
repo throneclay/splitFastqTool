@@ -85,6 +85,43 @@ void splitFiles(ulong filelines)
 
 }
 
+void splitDiffPart()
+{
+    char* buff[4];
+    for(int i=0;i<4;i++)
+        buff[i] = (char*)malloc(sizeof(char)*BUFFERSIZE);
+
+    int index[4] = {0};
+    int start=0, end=0, indexChooser=0;
+
+    while(readFile(BUFFERSIZE)) 
+    {
+        start=0;
+        end=0;
+        indexChooser = 0;
+        index[0]=0; index[1]=0; index[2]=0; index[3]=0;
+        for(int i=0;i<BUFFERSIZE;i++)
+        {
+            if(buffer[i]=='\n')
+            {
+                end=i;
+                memcpy(buff[indexChooser]+index[indexChooser],buffer+start,end-start+1);
+                index[indexChooser]+=end-start+1;
+
+                indexChooser=(indexChooser==3?0:indexChooser+1);
+                start=i+1;
+            }
+        }
+        for(int i=0;i<4;i++)
+        {
+            writeFile(splitfiles[i], buff[i],index[i]);
+        }
+    }
+    for(int i=0;i<4;i++)
+        free(buff[i]);
+
+}
+
 int main(int argc, char*argv[])
 {
     char fastq[64]="i";
@@ -108,24 +145,34 @@ int main(int argc, char*argv[])
         exit(1);
     }
     fastqfile=fopen(fastq, "r");
+    buffer = (char*)malloc(sizeof(char)*BUFFERSIZE);
+    int strl = 0;
     switch(mode)
     {
 case 0:
-//默认是进行划分任务
         splitsNum = 2;
-        int strl = strlen(genfile);
+        strl = strlen(genfile);
         for(int i=0;i<splitsNum;i++)
         {
             genfile[strl] = i+'0';
             genfile[strl+1] = '\0';
             splitfiles[i] = fopen(genfile, "a+");
         }
-        buffer = (char*)malloc(sizeof(char)*BUFFERSIZE);
         filelines = scanfile();
 
         fastqfile=fopen(fastq, "r");
         splitFiles(filelines);
         break;
+case 1:
+        splitsNum = 4;
+        strl = strlen(genfile);
+        for(int i=0;i<splitsNum;i++)
+        {
+            genfile[strl] = i+'0';
+            genfile[strl+1] = '\0';
+            splitfiles[i] = fopen(genfile, "a+");
+        }
+        splitDiffPart();
     }
 
     fclose(fastqfile);
