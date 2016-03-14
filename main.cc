@@ -25,6 +25,7 @@ size_t writeFile(FILE *file,char* data, size_t filelens)
 
 ulong scanfile()
 {
+    // 扫描文件，并检查文件的行数
     ulong lines=0;
     ulong readsize=0;
     ulong sumsize=0;
@@ -37,28 +38,30 @@ ulong scanfile()
                 lines++;
         }
     }
-    printf("lines=%ld\n",lines);
     fclose(fastqfile);
     return lines; 
 }
 void splitFiles(ulong filelines)
 {
+    //设置划分比例 按照文件的record进行划分 splitLines = filerecord * splitFactor / splitDivision
     const int splitFactor = 2, splitDivision = 3,recordLines=4;
+
     ulong readsize=0, sumsize=0,curLines=0;
     int split=0,filechooser=0;
 
+    // 计算要划分的行数
     ulong splitLines = filelines / splitDivision / recordLines;
     splitLines *= splitFactor *recordLines;
 
-    printf("splitLines = %ld\n" , splitLines);
-
+    // 进行划分
     while(readsize=readFile(BUFFERSIZE)) 
     {
-        sumsize+=readsize;
+        sumsize += readsize;
         for(int i=0;i<BUFFERSIZE;i++)
         {
             if(buffer[i]=='\n')
                 curLines++;
+            // 检查是否到达划分点
             if(buffer[i]=='\n'&&curLines==splitLines)
             {
                 split=i;
@@ -68,12 +71,12 @@ void splitFiles(ulong filelines)
         }
         if(split==0)
         {
-            //printf("write file %d size = %d\n",filechooser,readsize);
+            // 如果读取的文件还不到划分点，放入filechooser选定的文件
             writeFile(splitfiles[filechooser],buffer,readsize);
         }
         else
         {
-            //printf("start write file2 split = %ld\n",split);
+            // 如果读取的文件到达划分点，按照split的指示，放入filechooser选定的前后两个文件
             writeFile(splitfiles[filechooser-1],buffer, split); 
             writeFile(splitfiles[filechooser],buffer+split,readsize-split);
             split=0;
@@ -108,6 +111,7 @@ int main(int argc, char*argv[])
     switch(mode)
     {
 case 0:
+//默认是进行划分任务
         splitsNum = 2;
         int strl = strlen(genfile);
         for(int i=0;i<splitsNum;i++)
